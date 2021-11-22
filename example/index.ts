@@ -1,29 +1,30 @@
-import { TypeBuilder, TSchema, Static } from '@sinclair/typebox'
+import { TypeBuilder, TSchema, Static, CustomOptions } from '@sinclair/typebox'
 
 // -----------------------------------------------------------
 // Open API Extended Types
 // -----------------------------------------------------------
 
-export type TNullable<T extends TSchema> = TSchema & {
-    ['typebox:output']: Static<T> | null
-} & { nullable: true }
+export type TNullable<T extends TSchema> = Omit<T, '$schema'> & {
+    $static: Static<T> | null
+} & { nullable: true } & CustomOptions
 
 export type TStringUnion<T extends string[]> = TSchema & {
-    ['typebox:output']: {[K in keyof T]: T[K] }[number]
+    $static: {[K in keyof T]: T[K] }[number]
     enum: T
-}
+} & CustomOptions
 
 // -----------------------------------------------------------
 // Open API TypeBuilder
 // -----------------------------------------------------------
 
 export class OpenApiTypeBuilder extends TypeBuilder {
-    public Nullable<T extends TSchema>(schema: T): TNullable<T> {
-        return { ...schema, nullable: true } as any
+
+    public Nullable<T extends TSchema>(schema: T, options: CustomOptions = {}): TNullable<T> {
+        return { ...options, ...schema, nullable: true } as any
     }
 
-    public StringUnion<T extends string[]>(values: [...T]): TStringUnion<T> {
-        return { enum: values } as any
+    public StringUnion<T extends string[]>(values: [...T], options: CustomOptions = {}): TStringUnion<T> {
+        return { ...options, enum: values } as any
     }
 }
 
@@ -37,8 +38,9 @@ const A = Type.StringUnion(['A', 'B', 'C'])
 
 const B = Type.Nullable(Type.String())
 
-type A  = Static<typeof A>
+type A = Static<typeof A>
 
-type B  = Static<typeof B>
+type B = Static<typeof B>
 
-
+console.log(A)
+console.log(B)
